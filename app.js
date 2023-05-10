@@ -1,170 +1,250 @@
-userZoom = 3;
-doZoom(300);
-api_chat_send("/warp OurWorldofCraft")
-let worldBuffer = [];
-
-let Material = {
-  Grass: 32768,
-  Dirt: 8281926,
-  Stone: 8289918,
-  Gravel: 11316396,
-  Mud: 4271395,
-  Sand: 16772002,
-  Clay: 13418174,
-  Air: 16777215,
-  Iron: 12763344,
-  Copper: 13801216,
-  Gold: 16766976,
-  Diamond: 11204863,
-  Lava: 16711680,
+//before major chnge 374
+function minecraft() {}
+let timeOfDay = 0;
+let cycleSpeed = 1;
+let globalTickIterator = 0;
+var BlockImages = [];
+var charImages = [];
+var surfaces = null;
+var Material = null;
+var WorldSeed = null;
+var clientSetup = false;
+var timestamp = null;
+var drawBuffer = [];
+var tilesBuffer = [];
+const minecraftBlocks = "█";
+let dayColor = {
+  r: 226,
+  g: 241,
+  b: 255,
 }
 
-class MaterialLayer {
-  constructor(a, b, c, d, e, f, g, h, i, j, k, l, m) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
-    this.d = d;
-    this.e = e;
-    this.f = f;
-    this.g = g;
-    this.h = h;
-    this.i = i;
-    this.j = j;
-    this.k = k;
-    this.l = l;
-    this.m = m;
-
+function pixels() {
+  // This is what gives us that blocky pixel styling, rather than a blend between pixels.
+  owot.style.cssText = 'image-rendering: optimizeSpeed;' + // FireFox < 6.0
+    'image-rendering: -moz-crisp-edges;' + // FireFox
+    'image-rendering: -o-crisp-edges;' + // Opera
+    'image-rendering: -webkit-crisp-edges;' + // Chrome
+    'image-rendering: crisp-edges;' + // Chrome
+    'image-rendering: -webkit-optimize-contrast;' + // Safari
+    'image-rendering: pixelated; ' + // Future browsers
+    '-ms-interpolation-mode: nearest-neighbor;'; // IE
+  // Use nearest-neighbor scaling when images are resized instead of the resizing algorithm to create blur.
+  owotCtx.webkitImageSmoothingEnabled = false;
+  owotCtx.mozImageSmoothingEnabled = false;
+  owotCtx.msImageSmoothingEnabled = false;
+  owotCtx.imageSmoothingEnabled = false;
+}
+class User {
+  constructor(username, usertype) {
+    this.username = username;
+    this.usertype = usertype;
   }
+}
+var user = null;
 
-  getValues() {
-    return [this.a, this.b, this.c, this.d, this.e, this.f, this.g, this.h];
+function isJsonString(str) {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
   }
+  return true;
+}
 
-  setValues(values) {
-    [this.a, this.b, this.c, this.d, this.e, this.f, this.g, this.h] = values;
+function SendRecieveServerData(value) {
+  w.broadcastReceive(value);
+  w.on("cmd", function(e) {
+    if (e.sender) {
+      if (w.socketChannel !== e.sender) {
+        if (isJsonString(e.data)) {
+          const jsonData = JSON.parse(e.data);
+          if (jsonData.recieve) {
+            if (jsonData.recieve.sender == w.socketChannel) {
+
+              if (jsonData.recieve.dataType) {
+
+                if (jsonData.recieve.dataType == "setupClient") {
+                  OnSetupClient(jsonData.recieve);
+                }
+                if (jsonData.recieve.dataType == "TimeOfDay") {
+                  OnTimeOfDay(jsonData.recieve);
+                }
+                if (jsonData.recieve.dataType == "SurfaceData") {
+                  OnSurfaceData(jsonData.recieve);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  })
+}
+SendRecieveServerData(true);
+
+function tellServer(e) {
+  w.broadcastCommand(`{"broadcast":${JSON.stringify(e)}}`, true);
+}
+
+function AskSetupClient() {
+  w.hideChat();
+  if (clientSetup == false) {
+    w.on("chat", function(e) {
+      if (e.message == "This message is visible to only you.") {
+        tellServer({
+          SetupClient: e
+        })
+      }
+      removeChatByIdAndDate(e.id, timestamp)
+    })
+    api_chat_send("/test");
+    timestamp = Date.now();
+    setTimeout(function() {
+      AskSetupClient();
+    }, 1000)
   }
 }
 
-surface0 = new MaterialLayer(
-  Material.Dirt,
-  Material.Dirt,
-  Material.Mud,
-  Material.Sand,
-  Material.Mud,
-  Material.Sand,
-  Material.Gravel,
-  Material.Mud,
-  Material.Sand,
-  Material.Clay,
-  Material.Air,
-  Material.Clay,
-  Material.Stone,
+function OnSetupClient(e) {
+  clientSetup = true;
+  api_chat_send(e.grid);
+  userZoom = e.zoom;
+  doZoom(e.zoom * 100);
+  user = new User(e.username, e.usertype);
+  AskTimeOfDay();
+  AskForSurfaceData();
+}
 
-);
-surface1 = new MaterialLayer(
-  Material.Dirt,
-  Material.Dirt,
-  Material.Dirt,
-  Material.Mud,
-  Material.Mud,
-  Material.Dirt,
-  Material.Gravel,
-  Material.Mud,
-  Material.Sand,
-  Material.Clay,
-  Material.Air,
-  Material.Clay,
-  Material.Stone,
 
-);
-surface2 = new MaterialLayer(
-  Material.Dirt,
-  Material.Dirt,
-  Material.Dirt,
-  Material.Dirt,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Mud,
-  Material.Clay,
-  Material.Stone,
-  Material.Stone,
-  Material.Sand,
+function AskTimeOfDay() {
+  if (user) {
+    tellServer({
+      AskTimeOfDay: true,
+      User: user
+    })
+  }
+}
 
-);
-surface3 = new MaterialLayer(
-  Material.Dirt,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Mud,
-  Material.Clay,
-  Material.Stone,
-  Material.Stone,
-  Material.Sand,
-  Material.Clay,
-  Material.Mud,
-  Material.Clay,
+function AskForSurfaceData() {
+  if (user) {
+    tellServer({
+      AskSurfaceData: true,
+      User: user
+    })
+  }
+}
 
-);
+function AskForWorldData(x, y) {
+  if (user) {
 
-surface3 = new MaterialLayer(
-  Material.Dirt,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Mud,
-  Material.Clay,
-  Material.Iron,
-  Material.Stone,
-  Material.Iron,
-  Material.Clay,
-  Material.Mud,
-  Material.Iron,
+    tellServer({
+      AskForWorldData: true,
+      location: [x, y, tileW, tileH, cellW, cellH],
+      User: user,
+    })
+  }
+}
 
-);
-surface4 = new MaterialLayer(
-  Material.Stone,
-  Material.Dirt,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Mud,
-  Material.Clay,
-  Material.Iron,
-  Material.Stone,
-  Material.Iron,
-  Material.Clay,
-  Material.Mud,
-  Material.Gold,
+function OnSurfaceData(e) {
+  [surfaces, Material, WorldSeed] = e.packetData;
+}
 
-);
-surface5 = new MaterialLayer(
-  Material.Stone,
-  Material.Dirt,
-  Material.Clay,
-  Material.Clay,
-  Material.Clay,
-  Material.Mud,
-  Material.Clay,
-  Material.Iron,
-  Material.Air,
-  Material.Air,
-  Material.Clay,
-  Material.Mud,
-  Material.Diamond,
+function OnTimeOfDay(e) {
+  [timeOfDay, cycleSpeed] = e.packetData;
+  w.redraw();
+}
 
-);
+const asyncGetTiles = async () => {
+const uniqueArrays = await removeDuplicateArraysAsync(tilesBuffer);
+tilesBuffer = uniqueArrays;
+for (let i = 0; i < tilesBuffer.length; i++) {
+  const tile = tilesBuffer[i];
+  if (Array.isArray(tile)) {
+const [x,y] = tile;
+AskForWorldData(x,y)
+ 
+ 
+} else {
+  // the cell is for some reason not iterable
+}
+
+    tilesBuffer.splice(i, 1);
+    i--;
+  }
+
+setTimeout(function(){asyncGetTiles()},1000)
+}
+
+
+
+const removeDuplicateArraysAsync = async (arr) => {
+  let uniqueArrays = []; // declare the variable before the map method
+
+  await Promise.all(arr.map(async (innerArr) => {
+    // Wait for any asynchronous operations to complete if needed
+    //await someAsyncOperation();
+
+    // Use JSON.stringify to compare arrays as strings for equality
+    const isUnique = !uniqueArrays.some(a => JSON.stringify(a) === JSON.stringify(innerArr));
+
+    // Assign the result to the uniqueArrays variable
+    uniqueArrays = uniqueArrays || []; // initialize the variable if it's not set yet
+    if (isUnique) {
+      uniqueArrays.push(innerArr);
+    }
+  }));
+
+  return uniqueArrays;
+};
+
+
+function RenderPlayerEdits(char, X, Y, x, y) {
+  if (user) {
+    tellServer({
+      RenderUserEdits: [char, X, Y, x, y],
+      User: user
+    })
+  }
+}
+
+
+function renderBlock(char, charColor, tileX, tileY, charX, charY) {
+  if (!Tile.get(tileX, tileY)) {
+    Tile.set(tileX, tileY, blankTile());
+  }
+  var tile = Tile.get(tileX, tileY);
+  var cell_props = tile.properties.cell_props;
+  if (!cell_props) cell_props = {};
+  var color = tile.properties.color;
+  if (!color) color = new Array(tileArea).fill(0);
+
+  var hasChanged = false;
+  var prevColor = 0;
+  var prevBgColor = -1;
+  var prevChar = "";
+  var prevLink = getLink(tileX, tileY, charX, charY);
+
+  // set text color
+  prevColor = color[charY * tileC + charX];
+  color[charY * tileC + charX] = charColor;
+  if (prevColor != charColor) hasChanged = true;
+  tile.properties.color = color; // if the color array doesn't already exist in the tile
+  // update cell properties (link positions)
+
+  // set char locally
+  var con = tile.content;
+  prevChar = con[charY * tileC + charX];
+  con[charY * tileC + charX] = char;
+  if (prevChar != char) hasChanged = true;
+  w.setTileRedraw(tileX, tileY);
+
+}
 
 function loadScript(url, callback) {
   var script = document.createElement('script');
   script.type = 'text/javascript';
   script.src = url;
-
   script.onload = function() {
     callback();
   };
@@ -174,283 +254,78 @@ function loadScript(url, callback) {
 // Load perlin.js
 loadScript(`https://cdn.jsdelivr.net/gh/josephg/noisejs@latest/perlin.js`, function() {
   main();
-
-
 });
 
 function main() {
-  api_chat_send("/gridsize 10x10");
-  let worldSeed = noise.seed(5234);
+  pixels();
+  AskSetupClient(); // get client data for save states
+
+  //DisableUserInput(); // make it feel more gamelike
+  w.redraw();
+
   w.on("tileRendered", function(rendered) {
-    generateWorldData(rendered.tileX, rendered.tileY)
+    if (clientSetup) {
+      if (surfaces) {
+				tilesBuffer.push([rendered.tileX, rendered.tileY]);
+      }
+    }
   })
-
+asyncGetTiles();
 }
 
-function determineBlocks(depth, value, value2) {
-  //gernerate a generalized rarety percentage
-  //most common
-  let surfaceParameters = {};
-  if (depth < 0 + (value2)) {
-    surfaceParameters = surface0;
-  } else if (depth < 10 + (value2)) {
-    surfaceParameters = surface1;
-  } else if (depth < 20 + (value2)) {
-    surfaceParameters = surface2;
-  } else if (depth < 30 + (value2)) {
-    surfaceParameters = surface3;
-  } else if (depth < 40 + (value2)) {
-    surfaceParameters = surface4;
-  } else if (depth < 50 + (value2)) {
-    surfaceParameters = surface5;
-  } else {
-    return Material.Lava;
+
+
+// this function disables scrolling and zooming to help the game feel more like an actual game.
+function DisableUserInput() {
+  document.onmousewheel = function(e) {
+    e.preventDefault()
   }
-  if (value < 10 + (value2)) {
-    return surfaceParameters.a
-  } else if (value < 20 + (value2)) {
-    return surfaceParameters.b
-  } else if (value < 30 + (value2)) {
-    return surfaceParameters.c
-  } else if (value < 40 + (value2)) {
-    return surfaceParameters.d
-  } else if (value < 50 + (value2)) {
-    return surfaceParameters.e
-  } else if (value < 60 + (value2)) {
-    return surfaceParameters.f
-  } else if (value < 70 + (value2)) {
-    return surfaceParameters.g
-  } else if (value < 80 + (value2)) {
-    return surfaceParameters.h
-  } else if (value < 85 + (value2)) {
-    return surfaceParameters.i
-  } else if (value < 90 + (value2)) {
-    return surfaceParameters.j
-  } else if (value < 95 + (value2)) {
-    return surfaceParameters.k
-  } else if (value < 98.5 + (value2)) {
-    return surfaceParameters.l
-  } else {
-    return surfaceParameters.m
+  document.oncontextmenu = function(e) {
+    e.preventDefault()
   }
-}
-
-const generateWorldData = async (a, b) => {
-
-  const offset = 12345;
-  a += offset;
-  b += offset;
-  if (!Tile.get(a - offset, b - offset).content.toString().includes("█")) {
-    //generate base material
-    if (b - offset >= 0) {
-      for (let x = 0; x < (tileW / cellW); x++) {
-        for (let y = 0; y < (tileH / cellH); y++) {
-          let tileOffset = Math.abs(noise.perlin2((a * (a * tileW === 0 ? 1 : a * tileW)) / 100, (b * (b * tileH === 0 ? 1 : b * tileH)) / 100));
-          let celloffset = Math.abs(noise.simplex2((x * (a * tileW === 0 ? 1 : a * tileW)) / 100, (y * (b * tileH === 0 ? 1 : b * tileH)) / 100));
-          let cellValue = Math.abs(noise.simplex2((x * (a * tileW === 0 ? 1 : a * tileW)) / 100, (y * (b * tileH === 0 ? 1 : b * tileH)) / 100));
-          tileOffset *= 10;
-          celloffset *= 10;
-          cellValue *= 108.8;
-
-          const cell = ((x + a) + (y + b) * (tileW / cellW)) * 4;
-          let color = determineBlocks(b - offset, cellValue, celloffset);
-          //await worldBuffer.push([b, a, y, x, getDate(),"█" , nextObjId,color])
-          if (b - offset == 0) {
-
-            let z = Math.abs((Math.sin(2 * x) + Math.sin(Math.PI * x))) * 7
-            let w = Math.abs((Math.sin(2 * a) + Math.sin(Math.PI * a)))
-            z = Math.round(Math.abs(z) / 2); // cell hill
-            w = Math.round(Math.abs(w) * 6); // tile hill
-            if (z > 1) {
-              z = 0
-            }
-
-            if (w == z) {
-              z = 1
-            } else {
-              z += w; //generate a tile based hill offset
-            }
-            if (x == 0 || x == 15) {
-              z = Lerp(z, 4);
-            }
-
-            if (y > z) {
-
-              await broadcastWrite("█", color, a - offset, b - offset, x, y, true, false)
-            }
-            await broadcastWrite("█", Material.Grass, a - offset, b - offset, x, z, true, false)
-
-          } else {
-            await broadcastWrite("█", color, a - offset, b - offset, x, y, true, false)
-          }
-
-
-        }
+  changeZoom, doZoom = function() {
+    scrollingEnabled = false;
+    draggingEnabled = false;
+    gridEnabled = false;
+    cursorEnabled = false;
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.ctrlKey &&
+        (e.code === "Equal" ||
+          e.code === "NumpadAdd" ||
+          e.code === "Minus" ||
+          e.code === "NumpadSubtract" ||
+          e.code === "Equal" ||
+          e.code === "NumpadAdd" ||
+          e.code === "Minus" ||
+          e.code === "NumpadSubtract")
+      ) {
+        e.preventDefault();
       }
+    });
 
-    }
-    //Caves
-    if (b - offset > 0 && b - offset < 50) {
-      for (let x = 0; x < (tileW / cellW); x++) {
-        for (let y = 0; y < (tileH / cellH); y++) {
-          let tileValue = Math.abs(noise.perlin2((a * (a * tileW === 0 ? 1 : a * tileW)) / 100, (b * (b * tileH === 0 ? 1 : b * tileH)) / 100));
-          let cellValue = Math.abs(noise.perlin2((x * (a * tileW === 0 ? 1 : a * tileW)) / 100, (y * (b * tileH === 0 ? 1 : b * tileH)) / 100));
-          tileValue *= 50;
-          cellValue *= 50;
-          const cell = ((x + a) + (y + b) * (tileW / cellW)) * 4;
-          //await worldBuffer.push([b, a, y, x, getDate(),"█" , nextObjId,color])
-          if (cellValue + tileValue > 30 && b - offset == 0) {
-            await broadcastWrite("█", Material.Sand, a - offset, b - offset, x, y, true, false)
-          } else if (cellValue + tileValue > 40) {
-            await broadcastWrite(" ", Material.Air, a - offset, b - offset, x, y, true, false)
-          }
+    document.addEventListener(
+      "wheel",
+      (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
         }
+      }, {
+        passive: false
       }
-    }
+    );
+    return
   }
+  changeZoom();
 }
+
 setInterval(function() {
-  // network.write(worldBuffer.splice(0, 512))
-}, 10)
+  if (clientSetup) {
+    AskTimeOfDay();
+  }
+}, 10000);
 
-// place a character
-function broadcastWrite(char, charColor, tileX, tileY, charX, charY, local, broadcast, noUndo, undoOffset, charBgColor) {
 
-  if (!Tile.get(tileX, tileY)) {
-    return;
-  }
-  var tile = Tile.get(tileX, tileY);
-  var isErase = char == "\x08";
-  if (isErase) {
-    char = " ";
-    charColor = 0x000000;
-    charBgColor = -1;
-  }
-  if (charBgColor == null) {
-    charBgColor = -1;
-  }
-
-  var cell_props = tile.properties.cell_props;
-  if (!cell_props) cell_props = {};
-  var color = tile.properties.color;
-  var bgcolor = tile.properties.bgcolor;
-  if (!color) color = new Array(tileArea).fill(0);
-
-  var hasChanged = false;
-  var prevColor = 0;
-  var prevBgColor = -1;
-  var prevChar = "";
-  var prevLink = getLink(tileX, tileY, charX, charY);
-
-  // delete link locally
-  if (cell_props[charY]) {
-    if (cell_props[charY][charX]) {
-      delete cell_props[charY][charX];
-      hasChanged = true;
-    }
-  }
-  // change color locally
-  if (!Permissions.can_color_text(state.userModel, state.worldModel)) {
-    charColor = 0x000000;
-  }
-  if (!Permissions.can_color_cell(state.userModel, state.worldModel)) {
-    charBgColor = -1;
-  }
-
-  // set text color
-  prevColor = color[charY * tileC + charX];
-  color[charY * tileC + charX] = charColor;
-  if (prevColor != charColor) hasChanged = true;
-  tile.properties.color = color; // if the color array doesn't already exist in the tile
-
-  // set cell color
-  if (!bgcolor && charBgColor != -1) {
-    bgcolor = new Array(tileArea).fill(-1);
-    tile.properties.bgcolor = bgcolor;
-  }
-  if (bgcolor) {
-    prevBgColor = bgcolor[charY * tileC + charX];
-    bgcolor[charY * tileC + charX] = charBgColor;
-    if (prevBgColor != charBgColor) hasChanged = true;
-  }
-
-  // update cell properties (link positions)
-  tile.properties.cell_props = cell_props;
-
-  if (!isErase) {
-    currDeco = getCharTextDecorations(char);
-    char = clearCharTextDecorations(char);
-    char = detectCharEmojiCombinations(char) || char;
-    var cBold = textDecorationModes.bold;
-    var cItalic = textDecorationModes.italic;
-    var cUnder = textDecorationModes.under;
-    var cStrike = textDecorationModes.strike;
-    if (currDeco) {
-      cBold = cBold || currDeco.bold;
-      cItalic = cItalic || currDeco.italic;
-      cUnder = cUnder || currDeco.under;
-      cStrike = cStrike || currDeco.strike;
-    }
-    if (char == " ") { // don't let spaces be bold/italic
-      cBold = false;
-      cItalic = false;
-    }
-    char = setCharTextDecorations(char, cBold, cItalic, cUnder, cStrike);
-  }
-
-  // set char locally
-  var con = tile.content;
-  prevChar = con[charY * tileC + charX]
-  con[charY * tileC + charX] = char;
-  if (prevChar != char) hasChanged = true;
-  w.setTileRedraw(tileX, tileY);
-  if (bufferLargeChars) {
-    if (charY == 0) w.setTileRedraw(tileX, tileY - 1);
-    if (charX == tileC - 1) w.setTileRedraw(tileX + 1, tileY);
-    if (charY == 0 && charX == tileC - 1) w.setTileRedraw(tileX + 1, tileY - 1);
-  }
-  if (!local) {
-    if (hasChanged && (!noUndo || noUndo == -1)) {
-      if (noUndo != -1) {
-        undoBuffer.trim();
-      }
-      undoBuffer.push([tileX, tileY, charX, charY, prevChar, prevColor, prevLink, prevBgColor, undoOffset]);
-    }
-  }
-
-  //TEMP
-  if (window.payLoad && window.chunkMax && window.cleanMemory) {
-    return;
-  }
-
-  var editArray = [tileX, tileY, charX, charY, getDate(), char, nextObjId];
-  if (tileFetchOffsetX || tileFetchOffsetY) {
-    editArray[0] += tileFetchOffsetY;
-    editArray[1] += tileFetchOffsetX;
-  }
-
-  var charColorAdded = false;
-  if (charColor && Permissions.can_color_text(state.userModel, state.worldModel)) {
-    editArray.push(charColor);
-    charColorAdded = true;
-  }
-  if (charBgColor != null && charBgColor != -1 && Permissions.can_color_cell(state.userModel, state.worldModel)) {
-    if (!charColorAdded) {
-      editArray.push(0);
-    }
-    editArray.push(charBgColor);
-  }
-
-  tellEdit.push(editArray); // track local changes
-  if (!local) {
-    writeBuffer.push(editArray); // send edits to server
-  }
-  if (broadcast) {
-
-    w.broadcastCommand(`{"broadcast":${JSON.stringify(editArray)}}`, true);
-  }
-  nextObjId++;
-}
 const Lerp = (start = 0, end = 0, amt = 0.5, roundResult = false) => {
   let value = (1 - amt) * start + amt * end;
   if (roundResult) {
@@ -458,24 +333,12 @@ const Lerp = (start = 0, end = 0, amt = 0.5, roundResult = false) => {
   }
   return value;
 }
-let timeOfDay = 0;
-let cycleSpeed = 1;
-let r = (226);
-let g = (241);
-let b = (255);
-setInterval(function() {
-  timeOfDay += 10;
-  if (timeOfDay >= 1000) {
-    cycleSpeed = cycleSpeed * -1;
-    timeOfDay = 0;
-  }
-
-
-  w.redraw();
-}, 10000)
-
-globalTickIterator = 0;
 w.registerHook("renderchar", function(charCode, ctx, tileX, tileY, charX, charY, offsetX, offsetY, width, height) {
+  let {
+    r,
+    g,
+    b
+  } = dayColor;
   if (charCode !== 9608) {
     if (tileY < 3) {
       r += (226 - (((charY + (tileY * 7)) * 5)) * 2 - (timeOfDay)) * cycleSpeed;
@@ -517,51 +380,73 @@ const CycleImage = (imageArray, index) => {
 };
 
 const imgBase = "https://ik.imagekit.io/poopman/minecraft/";
-const imgUpdate = "?updatedAt=1681321062267";
+const imgUpdate = "?updatedAt=1681500165863";
 const getImage = (imgName) => {
   return imgBase + imgName + imgUpdate;
 }
-const blockChars = "█";
-var BlockImages = [];
-const SMImageSrc = {
+
+const MinecraftImageSource = {
   grass: [getImage("grass.png")],
+  dirt: [getImage("dirt.png")],
+  stone: [getImage("stone.png")],
+  gravel: [getImage("gravel.png")],
+  mud: [getImage("mud.png")],
+  sand: [getImage("sand.png")],
+  clay: [getImage("clay.png")],
+  iron: [getImage("iron-ore.png")],
+  copper: [getImage("copper-ore.png")],
+  gold: [getImage("gold-ore.png")],
+  diamond: [getImage("diamond-ore.png")],
+  lava: [getImage("lava-01.png"), getImage("lava-02.png"), getImage("lava-03.png"), getImage("lava-04.png"), getImage("lava-05.png"), getImage("lava-06.png"), getImage("lava-07.png"), getImage("lava-08.png"), getImage("lava-09.png"), getImage("lava-10.png")],
 }
-var charImages = [];
-const superMarioChars = "█";
-for (block in superMarioChars) {
+
+
+
+const materialKey = {
+  "32768": MinecraftImageSource.grass,
+  "8281926": MinecraftImageSource.dirt,
+  "8289918": MinecraftImageSource.stone,
+  "11316396": MinecraftImageSource.gravel,
+  "4271395": MinecraftImageSource.mud,
+  "16772002": MinecraftImageSource.sand,
+  "13418174": MinecraftImageSource.clay,
+  "12763344": MinecraftImageSource.iron,
+  "13801216": MinecraftImageSource.copper,
+  "16766976": MinecraftImageSource.gold,
+  "11204863": MinecraftImageSource.diamond,
+  "16711680": MinecraftImageSource.lava,
+}
+
+for (block in Object.keys(materialKey)) {
   charImages.push(new Image)
 }
-const replaceCharWithImage = (masterString, shortSubstring = "", wideSubstring = "", offsetRightSubstring) => {
-  w.registerHook("renderchar", (charCode, ctx, tileX, tileY, charX, charY, offsetX, offsetY, width, height) => {
-    const char = String.fromCharCode(charCode);
-    const str = masterString; // this is the main string used for image replacement.
-    const wide = wideSubstring; // this is a substring for cases where you want the image to be 2x wide.
-    const short = shortSubstring; // this is a substring for cases where you want the image to be 1/2 height.
-    const index = str.indexOf(char);
-    const charKey = Object.keys(SMImageSrc)[index];
 
+const getMaterialIndex = (number) => {
+  const keys = Object.keys(materialKey).sort((a, b) => Number(a) - Number(b));
+  const key = keys.find(key => Number(key) === number);
+  if (key) {
+    return keys.indexOf(key);
+  }
+  return -1;
+};
+
+const replaceColorWithImage = () => {
+  w.registerHook("renderchar", (charCode, ctx, tileX, tileY, charX, charY, offsetX, offsetY, width, height) => {
+    const color = getCharColor(tileX, tileY, charX, charY);
+    const index = getMaterialIndex(color);
+    const charKey = Object.keys(MinecraftImageSource)[index];
     if (charKey !== undefined) {
-      const imageSrc = CycleImage(SMImageSrc[charKey], globalTickIterator);
+      const imageSrc = CycleImage(MinecraftImageSource[charKey], globalTickIterator);
       charImages[index].src = imageSrc;
       ctx.fillStyle = "transparent";
       ctx.fillRect(offsetX, offsetY, width, height);
-      if (wide.includes(char)) {
-        offsetX -= width / 2;
-        width *= 2;
-      }
-      if (short.includes(char)) {
-        offsetY += height / 4;
-        height /= 2;
-        width /= 1.3;
-        offsetX += width / 6;
-      }
-      if (offsetRightSubstring.includes(char)) {
-        offsetX += width / 2;
-      }
       ctx.drawImage(charImages[index], offsetX, offsetY, width, height);
     }
     return false;
   });
 };
 
-//replaceCharWithImage(superMarioChars, "", "", "");
+replaceColorWithImage();
+
+//} //minecraft
+minecraft();
