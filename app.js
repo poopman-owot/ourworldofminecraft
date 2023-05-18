@@ -12,13 +12,14 @@ var WorldSeed = null;
 var clientSetup = false;
 var timestamp = null;
 var tilesBuffer = [];
-var playerLocation = [0,0,0,0];
+var playerLocation = [0, 0, 0, 0];
 const minecraftBlocks = "█";
 let dayColor = {
   r: 226,
   g: 241,
   b: 255,
 }
+useHighlight = false;
 
 function pixels() {
   // This is what gives us that blocky pixel styling, rather than a blend between pixels.
@@ -162,7 +163,8 @@ function SendPlayerEvent(e) {
     tellServer({
       SendPlayerEvent: true,
       User: user,
-      KeyboardEvent: [e.type, e.key]
+      KeyboardEvent: [e.type, e.key],
+      Color: YourWorld.Color
     })
   }
 }
@@ -282,8 +284,8 @@ loadScript(`https://cdn.jsdelivr.net/gh/josephg/noisejs@latest/perlin.js`, funct
 function main() {
   pixels();
   AskSetupClient(); // get client data for save states
-textInput.remove();
-  //DisableUserInput(); // make it feel more gamelike
+  textInput.remove();
+  DisableUserInput(); // make it feel more gamelike
   w.redraw();
 
   w.on("tileRendered", function(rendered) {
@@ -307,41 +309,46 @@ function DisableUserInput() {
   document.oncontextmenu = function(e) {
     e.preventDefault()
   }
-  changeZoom, doZoom = function() {
-    scrollingEnabled = false;
-    draggingEnabled = false;
-    gridEnabled = false;
-    cursorEnabled = false;
-    document.addEventListener("keydown", (e) => {
-      if (
-        e.ctrlKey &&
-        (e.code === "Equal" ||
-          e.code === "NumpadAdd" ||
-          e.code === "Minus" ||
-          e.code === "NumpadSubtract" ||
-          e.code === "Equal" ||
-          e.code === "NumpadAdd" ||
-          e.code === "Minus" ||
-          e.code === "NumpadSubtract")
-      ) {
+  defaultCursor = "pointer";
+  defaultDragCursor = "pointer";
+  scrollingEnabled = false;
+  draggingEnabled = false;
+  gridEnabled = false;
+  cursorOutlineEnabled = true;
+  Permissions.can_edit_tile = function() {
+    return true
+  }
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.ctrlKey &&
+      (e.code === "Equal" ||
+        e.code === "NumpadAdd" ||
+        e.code === "Minus" ||
+        e.code === "NumpadSubtract" ||
+        e.code === "Equal" ||
+        e.code === "NumpadAdd" ||
+        e.code === "Minus" ||
+        e.code === "NumpadSubtract")
+    ) {
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener(
+    "wheel",
+    (e) => {
+      if (e.ctrlKey) {
         e.preventDefault();
       }
-    });
+    }, {
+      passive: false
+    }
+  );
 
-    document.addEventListener(
-      "wheel",
-      (e) => {
-        if (e.ctrlKey) {
-          e.preventDefault();
-        }
-      }, {
-        passive: false
-      }
-    );
+  return
 
-    return
-  }
-  changeZoom();
+
+
 }
 
 setInterval(function() {
@@ -508,13 +515,13 @@ const replaceColorWithImage = () => {
 };
 
 function onPlayerData(e) {
-playerLocation = e.location;
-  
+  playerLocation = e.location;
+
 }
-    setInterval(function() {
-    centerPlayer(playerLocation, [0, 0], 0.05);
- w.redraw();
-    }, 10)
+setInterval(function() {
+  centerPlayer(playerLocation, [0, 0], 0.05);
+  w.redraw();
+}, 10)
 //replaceColorWithImage();
 
 //} //minecraft
