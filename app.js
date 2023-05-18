@@ -1,4 +1,5 @@
 //before major chnge 374
+//Before playersided changes 408
 function minecraft() {}
 let timeOfDay = 0;
 let cycleSpeed = 1;
@@ -10,8 +11,8 @@ var Material = null;
 var WorldSeed = null;
 var clientSetup = false;
 var timestamp = null;
-var drawBuffer = [];
 var tilesBuffer = [];
+var playerLocation = [0,0,0,0];
 const minecraftBlocks = "█";
 let dayColor = {
   r: 226,
@@ -73,6 +74,9 @@ function SendRecieveServerData(value) {
                 if (jsonData.recieve.dataType == "SurfaceData") {
                   OnSurfaceData(jsonData.recieve);
                 }
+                if (jsonData.recieve.dataType == "PlayerData") {
+                  onPlayerData(jsonData.recieve);
+                }
               }
             }
           }
@@ -106,14 +110,21 @@ function AskSetupClient() {
   }
 }
 
-function OnSetupClient(e) {
-  clientSetup = true;
-  api_chat_send(e.grid);
-  userZoom = e.zoom;
-  doZoom(e.zoom * 100);
-  user = new User(e.username, e.usertype);
-  AskTimeOfDay();
-  AskForSurfaceData();
+function OnSetupClient(server) {
+  if (server) {
+    const e = server;
+    clientSetup = true;
+    api_chat_send(e.grid);
+    userZoom = e.zoom;
+    doZoom(e.zoom * 100);
+    user = new User(e.username, e.usertype);
+    AskTimeOfDay();
+    AskForSurfaceData();
+    api_chat_send = doZoom = w.goToCoord = () => OnSetupClient();
+
+  } else {
+    console.error("Communication from minecraft server failed.")
+  }
 }
 
 
@@ -146,6 +157,16 @@ function AskForWorldData(x, y) {
   }
 }
 
+function SendPlayerEvent(e) {
+  if (user) {
+    tellServer({
+      SendPlayerEvent: true,
+      User: user,
+      KeyboardEvent: [e.type, e.key]
+    })
+  }
+}
+
 function OnSurfaceData(e) {
   [surfaces, Material, WorldSeed] = e.packetData;
 }
@@ -156,24 +177,26 @@ function OnTimeOfDay(e) {
 }
 
 const asyncGetTiles = async () => {
-const uniqueArrays = await removeDuplicateArraysAsync(tilesBuffer);
-tilesBuffer = uniqueArrays;
-for (let i = 0; i < tilesBuffer.length; i++) {
-  const tile = tilesBuffer[i];
-  if (Array.isArray(tile)) {
-const [x,y] = tile;
-AskForWorldData(x,y)
- 
- 
-} else {
-  // the cell is for some reason not iterable
-}
+  const uniqueArrays = await removeDuplicateArraysAsync(tilesBuffer);
+  tilesBuffer = uniqueArrays;
+  for (let i = 0; i < tilesBuffer.length; i++) {
+    const tile = tilesBuffer[i];
+    if (Array.isArray(tile)) {
+      const [x, y] = tile;
+      AskForWorldData(x, y)
+
+
+    } else {
+      // the cell is for some reason not iterable
+    }
 
     tilesBuffer.splice(i, 1);
     i--;
   }
 
-setTimeout(function(){asyncGetTiles()},1000)
+  setTimeout(function() {
+    asyncGetTiles()
+  }, 1000)
 }
 
 
@@ -259,24 +282,25 @@ loadScript(`https://cdn.jsdelivr.net/gh/josephg/noisejs@latest/perlin.js`, funct
 function main() {
   pixels();
   AskSetupClient(); // get client data for save states
-
+textInput.remove();
   //DisableUserInput(); // make it feel more gamelike
   w.redraw();
 
   w.on("tileRendered", function(rendered) {
     if (clientSetup) {
       if (surfaces) {
-				tilesBuffer.push([rendered.tileX, rendered.tileY]);
+        tilesBuffer.push([rendered.tileX, rendered.tileY]);
       }
     }
   })
-asyncGetTiles();
+  asyncGetTiles();
 }
 
 
 
 // this function disables scrolling and zooming to help the game feel more like an actual game.
 function DisableUserInput() {
+
   document.onmousewheel = function(e) {
     e.preventDefault()
   }
@@ -314,6 +338,7 @@ function DisableUserInput() {
         passive: false
       }
     );
+
     return
   }
   changeZoom();
@@ -333,48 +358,7 @@ const Lerp = (start = 0, end = 0, amt = 0.5, roundResult = false) => {
   }
   return value;
 }
-w.registerHook("renderchar", function(charCode, ctx, tileX, tileY, charX, charY, offsetX, offsetY, width, height) {
-  let {
-    r,
-    g,
-    b
-  } = dayColor;
-  if (charCode !== 9608) {
-    if (tileY < 3) {
-      r += (226 - (((charY + (tileY * 7)) * 5)) * 2 - (timeOfDay)) * cycleSpeed;
-      g += (241 - (((charY + (tileY * 7)) * 3)) * 2 - (timeOfDay)) * cycleSpeed;
-      b += (255 - (((charY + (tileY * 7)))) * 2 - (timeOfDay)) * cycleSpeed;
-      r = Math.max(Math.min(r, 255), 0);
-      g = Math.max(Math.min(g, 255), 0);
-      b = Math.max(Math.min(b, 255), 0);
 
-      ctx.fillStyle = `rgba(${r}, ${g},  ${b}, 1)`;
-      ctx.fillRect(offsetX, offsetY, width, height);
-      if (r < (Math.random() * 100) && g < (Math.random() * 100) && b < (Math.random() * 100)) {
-
-        ctx.fillStyle = `rgba(${205+r}, ${205+g},  ${205+b}, ${Math.random()*1})`
-        ctx.fillRect(offsetX, offsetY, 1, 1)
-      }
-
-      r = 50
-      g = 50
-      b = 50
-
-
-      return true;
-    } else {
-      ctx.fillStyle = `rgba(50, 50,  50, 1)`;
-      ctx.fillRect(offsetX, offsetY, width, height);
-      ctx.beginPath();
-      ctx.moveTo(offsetX, offsetY);
-      ctx.lineTo(offsetX + width, offsetY + height);
-      ctx.stroke();
-      return true;
-    }
-
-    return false;
-  }
-});
 const CycleImage = (imageArray, index) => {
   return imageArray[globalTickIterator % imageArray.length];
 };
@@ -429,6 +413,83 @@ const getMaterialIndex = (number) => {
   }
   return -1;
 };
+const CellToPixelCoords = (...cellCoords) => {
+  const [x = 0, y = 0, z = 0, w = 0] = Array.isArray(cellCoords[0]) ? cellCoords[0] : cellCoords;
+
+  if (cellCoords.length > 4 || x === undefined || y === undefined || z === undefined || w === undefined) {
+    console.error(`CellToPixelCoords: Invalid cellCoords. Arguments can either be [x, y, z, w] or x, y, z, w. Your cellCoords was: ${cellCoords}`);
+    return;
+  }
+
+  const X = Math.round(x) * tileW + z * cellW + Math.round(positionX) + Math.round(owotWidth / 2);
+  const Y = Math.round(y) * tileH + w * cellH + Math.round(positionY) + Math.round(owotHeight / 2);
+
+  return [X, Y];
+}
+
+const SubtractArrays = (arr1, arr2, roundResult = false) => {
+  const resultArray = arr1.map((value, index) => {
+    let result = value - arr2[index];
+    if (roundResult) {
+      result = Math.round(result);
+    }
+    return result;
+  });
+  return resultArray;
+}
+const LerpArray = (startArray, endArray = startArray.map(() => 0), amt = 0.5, roundResult = false) => {
+  let resultArray = startArray.map((value, i) => Lerp(value, endArray[i], amt, roundResult));
+  return resultArray;
+}
+const centerPlayer = (coords, offset = [0, 0], lerpSpeed = 0.01, ...rest) => {
+  let x = 0,
+    y = 0;
+  // If input is an array
+  if (Array.isArray(offset) && offset.length < 3) {
+    [x = 0, y = 0] = offset;
+  }
+  // If input is two separate arguments
+  else if (rest.length < 2) {
+    [x = 0, y = 0] = rest;
+  }
+  // Invalid input
+  else {
+    console.error(`centerPlayer: Invalid offset. Arguments can either be [x, y] or x, y. Your offset was: ${offset}`);
+    return;
+  }
+  return ScrollWorld(LerpArray([0, 0], SubtractArrays(CellToPixelCoords(coords), [(owotWidth / 2) + x, (owotHeight / 2) + y]), lerpSpeed));
+};
+const ScrollWorld = (offset = [0, 0], ...rest) => {
+  let x = 0,
+    y = 0;
+
+  // If input is an array
+  if (Array.isArray(offset) && offset.length < 3) {
+    [x = 0, y = 0] = offset;
+  }
+  // If input is two separate arguments
+  else if (rest.length < 2) {
+    [x = 0, y = 0] = rest;
+  }
+  // Invalid input
+  else {
+    console.error(`ScrollWorld: Invalid offset. Arguments can either be [x, y] or x, y. Your offset was: ${offset}`);
+    return;
+  }
+
+  const deltaX = Math.trunc(x);
+  const deltaY = Math.trunc(y);
+
+  positionY -= deltaY;
+  positionX -= deltaX;
+
+  w.emit("scroll", {
+    deltaX: -deltaX,
+    deltaY: -deltaY
+  });
+
+  return [deltaY, deltaX];
+};
 
 const replaceColorWithImage = () => {
   w.registerHook("renderchar", (charCode, ctx, tileX, tileY, charX, charY, offsetX, offsetY, width, height) => {
@@ -446,7 +507,22 @@ const replaceColorWithImage = () => {
   });
 };
 
-replaceColorWithImage();
+function onPlayerData(e) {
+playerLocation = e.location;
+  
+}
+    setInterval(function() {
+    centerPlayer(playerLocation, [0, 0], 0.05);
+ w.redraw();
+    }, 10)
+//replaceColorWithImage();
 
 //} //minecraft
 minecraft();
+
+document.addEventListener('keydown', (event) => {
+  SendPlayerEvent(event);
+});
+document.addEventListener('keyup', (event) => {
+  SendPlayerEvent(event);
+});
