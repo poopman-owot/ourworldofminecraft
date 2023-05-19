@@ -1,5 +1,7 @@
 //before major chnge 374
 //Before playersided changes 408
+////506 working strike on blocks with stats on server
+//500 stats load into ui
 function minecraft() {}
 let timeOfDay = 0;
 let cycleSpeed = 1;
@@ -78,6 +80,11 @@ function SendRecieveServerData(value) {
                 if (jsonData.recieve.dataType == "PlayerData") {
                   onPlayerData(jsonData.recieve);
                 }
+                if (jsonData.recieve.dataType == "PlayerStats") {
+                  onPlayerStats(jsonData.recieve);
+                }
+
+
               }
             }
           }
@@ -163,7 +170,8 @@ function SendPlayerEvent(e) {
     tellServer({
       SendPlayerEvent: true,
       User: user,
-      KeyboardEvent: [e.type, e.key],
+      PlayerEvent: [e.type, e.key, e.button],
+			Cursor: cursorCoords,
       Color: YourWorld.Color
     })
   }
@@ -177,7 +185,23 @@ function OnTimeOfDay(e) {
   [timeOfDay, cycleSpeed] = e.packetData;
   w.redraw();
 }
+function onPlayerStats(e){
+const stats = e.stats[0];
+// Loop through each key in the object
+for (const key in stats) {
+  // Construct the element id using "bn-" + the key name in lowercase
+  const elementId = "bn-" + key.toLowerCase();
+console.log(elementId)
+  // Find the element using the id
+  const element = document.getElementById(elementId);
 
+  // Set the innertext of the element to the value of the corresponding key
+  if (element) {
+    element.innerText = stats[key];
+  }
+}
+
+}
 const asyncGetTiles = async () => {
   const uniqueArrays = await removeDuplicateArraysAsync(tilesBuffer);
   tilesBuffer = uniqueArrays;
@@ -533,3 +557,92 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
   SendPlayerEvent(event);
 });
+document.addEventListener('mousedown', (event) => {
+	SendPlayerEvent(event);
+});
+document.addEventListener('mouseup', (event) => {
+	SendPlayerEvent(event);
+});
+
+
+//------------------------------------style---------------------------UI-----------------------------------------
+var radioHTML = ``;
+const labelsText = ["grass", "dirt","stone","gravel","mud","sand","clay","iron","copper","gold","diamond"]
+const labelsBG = ["rgb(0,128,0)","rgb(126,95,70)","rgb(126,126,126)","rgb(172,172,172)",
+"rgb(65,45,35)","rgb(255,235,162)","rgb(204,190,190)","rgb(194,192,208)","rgb(210,151,0)","rgb(255,216,0)","rgb(170,248,255)"] 
+for(i=0;i<11;i++){
+radioHTML += `
+    <input type="radio" id="radio${i}" name="radioGroup" class="radio-input">
+    <label for="radio${i}">
+      <div class="radio-label">
+        <div src="image1.png" class="radio-image" style = "background-color:${labelsBG[i]}"><div class="block-num" id="bn-${labelsText[i]}">0</div></div>
+        <div class="radio-text">${labelsText[i]}</div>
+      </div>
+    </label>\n
+`
+}
+
+const mc_html = `
+<div id="mc-toolbar">
+${radioHTML}
+    
+</div>`;
+const mc_css = `
+#mc-toolbar{
+    position: fixed;
+    height: 100px;
+    width: 100%;
+    bottom: 0px;
+    left: 0px;
+    background-color: #000000d1;
+    display: flex;
+    justify-content: center;
+    font-family: monospace;
+}
+
+
+.radio-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+
+}
+
+.radio-input:checked + label .radio-image {
+   border: 2px solid white; /* Default outline color */
+}
+.radio-image {
+  width: 50px;
+  height: 50px;
+    border: 2px solid black; /* Default outline color */
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    flex-direction: column;
+
+}
+
+.radio-text {
+  color: white;
+  margin-top: 5px;
+}
+.radio-input {
+  display: none;
+}
+.block-num {
+    text-align: center;
+    position: absolute;
+    top: 25px;
+    font-weight: 900;
+
+    text-shadow: 0 0 4px white;
+}
+`;
+
+const head = document.head || document.getElementsByTagName('head')[0];
+const style = document.createElement('style');
+style.type = 'text/css';
+style.appendChild(document.createTextNode(mc_css));
+head.appendChild(style);
+document.querySelector('body').insertAdjacentHTML('beforeend', mc_html);
