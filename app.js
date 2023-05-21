@@ -560,10 +560,13 @@ document.addEventListener('keyup', (event) => {
 document.addEventListener('mousedown', (event) => {
 	SendPlayerEvent(event);
 });
-document.addEventListener('mouseup', (event) => {
+owot.addEventListener('mouseup', (event) => {
 	SendPlayerEvent(event);
-});
 
+});
+owot.addEventListener('mousemove', (event) => {
+	event_mouseup(event)
+});
 function getBlockUI(){
 const selectedRadio = document.querySelector('.block-radio:checked + label div div + div');
 
