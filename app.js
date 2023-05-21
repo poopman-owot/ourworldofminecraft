@@ -172,7 +172,8 @@ function SendPlayerEvent(e) {
       User: user,
       PlayerEvent: [e.type, e.key, e.button],
 			Cursor: cursorCoords,
-      Color: YourWorld.Color
+      Color: YourWorld.Color,
+			BlockUI: getBlockUI()
     })
   }
 }
@@ -191,7 +192,6 @@ const stats = e.stats[0];
 for (const key in stats) {
   // Construct the element id using "bn-" + the key name in lowercase
   const elementId = "bn-" + key.toLowerCase();
-console.log(elementId)
   // Find the element using the id
   const element = document.getElementById(elementId);
 
@@ -564,6 +564,15 @@ document.addEventListener('mouseup', (event) => {
 	SendPlayerEvent(event);
 });
 
+function getBlockUI(){
+const selectedRadio = document.querySelector('.block-radio:checked + label div div + div');
+
+if(selectedRadio){
+return selectedRadio.innerText
+
+}
+return null
+}
 
 //------------------------------------style---------------------------UI-----------------------------------------
 var radioHTML = ``;
@@ -572,7 +581,7 @@ const labelsBG = ["rgb(0,128,0)","rgb(126,95,70)","rgb(126,126,126)","rgb(172,17
 "rgb(65,45,35)","rgb(255,235,162)","rgb(204,190,190)","rgb(194,192,208)","rgb(210,151,0)","rgb(255,216,0)","rgb(170,248,255)"] 
 for(i=0;i<11;i++){
 radioHTML += `
-    <input type="radio" id="radio${i}" name="radioGroup" class="radio-input">
+    <input type="radio" id="radio${i}" name="radioGroup" class="radio-input block-radio">
     <label for="radio${i}">
       <div class="radio-label">
         <div src="image1.png" class="radio-image" style = "background-color:${labelsBG[i]}"><div class="block-num" id="bn-${labelsText[i]}">0</div></div>
