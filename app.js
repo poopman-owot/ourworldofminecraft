@@ -101,11 +101,14 @@ function tellServer(e) {
 
 function AskSetupClient() {
   w.hideChat();
+console.log("askSetupClinet",loadFromCookie("stats"))
   if (clientSetup == false) {
     w.on("chat", function(e) {
       if (e.message == "This message is visible to only you.") {
         tellServer({
-          SetupClient: e
+          SetupClient: e,
+					Stats: loadFromCookie("stats")
+
         })
       }
       removeChatByIdAndDate(e.id, timestamp)
@@ -188,6 +191,7 @@ function OnTimeOfDay(e) {
 }
 function onPlayerStats(e){
 const stats = e.stats[0];
+saveToCookie("stats", JSON.stringify(stats));
 // Loop through each key in the object
 for (const key in stats) {
   // Construct the element id using "bn-" + the key name in lowercase
@@ -542,6 +546,33 @@ function onPlayerData(e) {
   playerLocation = e.location;
 
 }
+const saveToCookie = (name, value) => {
+  // Create the expiration date for the cookie (set to a distant future date)
+  const expirationDate = new Date();
+  expirationDate.setFullYear(expirationDate.getFullYear() + 10); // Set it to expire in 10 years
+
+  // Format the cookie string
+  const cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)};expires=${expirationDate.toUTCString()};path=/`;
+
+  // Save the cookie
+  document.cookie = cookie;
+};
+
+const loadFromCookie = (name) => {
+  const encodedName = encodeURIComponent(name);
+  const cookieParts = document.cookie.split('; ');
+
+  for (let i = 0; i < cookieParts.length; i++) {
+    const cookie = cookieParts[i].split('=');
+    const decodedName = decodeURIComponent(cookie[0]);
+
+    if (decodedName === encodedName) {
+      return decodeURIComponent(cookie[1]);
+    }
+  }
+
+  return null; // Cookie not found
+};
 setInterval(function() {
   centerPlayer(playerLocation, [0, 0], 0.05);
   w.redraw();
