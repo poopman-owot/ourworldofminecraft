@@ -179,7 +179,14 @@ function SendPlayerEvent(e) {
     })
   }
 }
-
+function GoBackToSpawn() {
+  if (user) {
+    tellServer({
+      GoBackToSpawn: true,
+      User: user,
+    })
+  }
+}
 function OnSurfaceData(e) {
   [surfaces, Material, WorldSeed] = e.packetData;
 }
@@ -197,11 +204,23 @@ for (const key in stats) {
   const elementId = "bn-" + key.toLowerCase();
   // Find the element using the id
   const element = document.getElementById(elementId);
-
+  const hearts = (stats.hearts)
   // Set the innertext of the element to the value of the corresponding key
   if (element) {
     element.innerText = stats[key];
   }
+
+var heartElements = document.getElementsByClassName("heart");
+
+// Set all hearts to be visible
+for (var i = 0; i < 10; i++) {
+  heartElements[i].style.visibility = "visible";
+}
+
+// Set the last 3 hearts to be hidden
+for (var i = 10 - 1; i >= 10 - (10-hearts); i--) {
+  heartElements[i].style.visibility = "hidden";
+}
 }
 
 }
@@ -398,7 +417,7 @@ const CycleImage = (imageArray, index) => {
 };
 
 const imgBase = "https://ik.imagekit.io/poopman/minecraft/";
-const imgUpdate = "?updatedAt=1681500165863";
+const imgUpdate = "?updatedAt=1684778494220";
 const getImage = (imgName) => {
   return imgBase + imgName + imgUpdate;
 }
@@ -416,9 +435,9 @@ const MinecraftImageSource = {
   gold: [getImage("gold-ore.png")],
   diamond: [getImage("diamond-ore.png")],
   lava: [getImage("lava-01.png"), getImage("lava-02.png"), getImage("lava-03.png"), getImage("lava-04.png"), getImage("lava-05.png"), getImage("lava-06.png"), getImage("lava-07.png"), getImage("lava-08.png"), getImage("lava-09.png"), getImage("lava-10.png")],
+heart: [getImage("heart.png")],
+home: [getImage("home.png")],
 }
-
-
 
 const materialKey = {
   "32768": MinecraftImageSource.grass,
@@ -587,12 +606,11 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
   SendPlayerEvent(event);
 });
-document.addEventListener('mousedown', (event) => {
+owot.addEventListener('mousedown', (event) => {
 	SendPlayerEvent(event);
 });
 owot.addEventListener('mouseup', (event) => {
 	SendPlayerEvent(event);
-
 });
 owot.addEventListener('mousemove', (event) => {
 	event_mouseup(event)
@@ -609,6 +627,7 @@ return null
 
 //------------------------------------style---------------------------UI-----------------------------------------
 var radioHTML = ``;
+var heartsHTML = ``;
 const labelsText = ["grass", "dirt","stone","gravel","mud","sand","clay","iron","copper","gold","diamond"]
 const labelsBG = ["rgb(0,128,0)","rgb(126,95,70)","rgb(126,126,126)","rgb(172,172,172)",
 "rgb(65,45,35)","rgb(255,235,162)","rgb(204,190,190)","rgb(194,192,208)","rgb(210,151,0)","rgb(255,216,0)","rgb(170,248,255)"] 
@@ -623,13 +642,60 @@ radioHTML += `
     </label>\n
 `
 }
-
+for(i=1;i<=10;i++){
+heartsHTML += `
+<img class="heart" src = ${MinecraftImageSource.heart}>
+`
+}
 const mc_html = `
+<div id="mc-healthbar">
+${heartsHTML}
+</div>
+<div id="home-bar">
+<input type="button" id="mc-home-btn" name="home" class="" onclick= "GoBackToSpawn();">
+<label id="home-label"for="mc-home-btn">
+<img id="mc-home-img" src = ${MinecraftImageSource.home}> 
+<div class="block-num" id="h-text" style = "position: static;">Respawn</div>
+</label>
+</div>
 <div id="mc-toolbar">
 ${radioHTML}
-    
+   
 </div>`;
 const mc_css = `
+#home-bar{
+    position: fixed;
+height:100px;
+width:100%;
+    background-color: #000000d1;
+    display: flex;
+    justify-content: center;
+    font-family: monospace;
+    top:0px;
+}
+#home-label{
+    position: fixed;
+    top: 12px;
+    left: 50px;
+    height: 50px;
+    width: 50px;
+    z-index: 1;
+    cursor: pointer;
+font-family: monospace;
+    color: white;
+}
+
+#mc-healthbar{
+    position: fixed;
+    height: 50px;
+    width: 100%;
+    bottom: 100px;
+    left: 0px;
+    background-color: #000000d1;
+    display: flex;
+    justify-content: center;
+    font-family: monospace;
+}
 #mc-toolbar{
     position: fixed;
     height: 100px;
@@ -648,7 +714,7 @@ const mc_css = `
   flex-direction: column;
   align-items: center;
   margin: 10px;
-
+  cursor: pointer;
 }
 
 .radio-input:checked + label .radio-image {
