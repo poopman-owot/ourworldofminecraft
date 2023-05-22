@@ -101,7 +101,6 @@ function tellServer(e) {
 
 function AskSetupClient() {
   w.hideChat();
-console.log("askSetupClinet",loadFromCookie("stats"))
   if (clientSetup == false) {
     w.on("chat", function(e) {
       if (e.message == "This message is visible to only you.") {
