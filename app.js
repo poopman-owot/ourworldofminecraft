@@ -2,6 +2,9 @@
 //Before playersided changes 408
 ////506 working strike on blocks with stats on server
 //500 stats load into ui
+//578 heart ui
+//582 before player token
+//585 after player token
 function minecraft() {}
 let timeOfDay = 0;
 let cycleSpeed = 1;
@@ -126,7 +129,9 @@ function OnSetupClient(server) {
     clientSetup = true;
     api_chat_send(e.grid);
     userZoom = e.zoom;
+if(doZoom){
     doZoom(e.zoom * 100);
+}
     user = new User(e.username, e.usertype);
     AskTimeOfDay();
     AskForSurfaceData();
@@ -197,6 +202,7 @@ function OnTimeOfDay(e) {
 }
 function onPlayerStats(e){
 const stats = e.stats[0];
+console.log(stats)
 saveToCookie("stats", JSON.stringify(stats));
 // Loop through each key in the object
 for (const key in stats) {
@@ -417,26 +423,61 @@ const CycleImage = (imageArray, index) => {
 };
 
 const imgBase = "https://ik.imagekit.io/poopman/minecraft/";
-const imgUpdate = "?updatedAt=1684778494220";
+const imgUpdate = "?updatedAt=1684871602842";
 const getImage = (imgName) => {
   return imgBase + imgName + imgUpdate;
 }
 
 const MinecraftImageSource = {
   grass: [getImage("grass.png")],
-  dirt: [getImage("dirt.png")],
-  stone: [getImage("stone.png")],
-  gravel: [getImage("gravel.png")],
-  mud: [getImage("mud.png")],
-  sand: [getImage("sand.png")],
-  clay: [getImage("clay.png")],
-  iron: [getImage("iron-ore.png")],
-  copper: [getImage("copper-ore.png")],
-  gold: [getImage("gold-ore.png")],
+    mud: [getImage("mud.png")],
+dirt: [getImage("dirt.png")],
+stone: [getImage("stone.png")],
   diamond: [getImage("diamond-ore.png")],
-  lava: [getImage("lava-01.png"), getImage("lava-02.png"), getImage("lava-03.png"), getImage("lava-04.png"), getImage("lava-05.png"), getImage("lava-06.png"), getImage("lava-07.png"), getImage("lava-08.png"), getImage("lava-09.png"), getImage("lava-10.png")],
+  gravel: [getImage("gravel.png")],
+iron: [getImage("iron-ore.png")],
+clay: [getImage("clay.png")],
+copper: [getImage("copper-ore.png")],
+ lava: [getImage("lava-01.png"), getImage("lava-02.png"), getImage("lava-03.png"), getImage("lava-04.png"), getImage("lava-05.png"), getImage("lava-06.png"), getImage("lava-07.png"), getImage("lava-08.png"), getImage("lava-09.png"), getImage("lava-10.png")],
+  gold: [getImage("gold-ore.png")],
+sand: [getImage("sand.png")],
 heart: [getImage("heart.png")],
 home: [getImage("home.png")],
+player_head_left: [getImage("player-head-left.png")],
+player_head_right: [getImage("player-head-right.png")],
+player_chest_left: [getImage("player-chest-left.png")],
+player_chest_right: [getImage("player-chest-right.png")],
+player_stand_left: [getImage("player-stand-left.png")],
+player_stand_right: [getImage("player-stand-right.png")],
+player_rightarm_stand_left: [getImage("player-rightarm-stand-left.png")],
+player_leftarm_stand_right: [getImage("player-leftarm-stand-right.png")],
+player_leftleg_walk_right_01: [getImage("player_leftleg_walk_right_01.png")],
+player_rightleg_walk_right_01: [getImage("player_rightleg_walk_right_01.png")],
+player_pants_walk: [getImage("player_pants_walk.png")],
+player_leftleg_walk_left_01: [getImage("player_leftleg_walk_left_01.png")],
+player_rightleg_walk_left_01: [getImage("player_rightleg_walk_left_01.png")],
+player_rightleg_walk_left_02: [getImage("player_rightleg_walk_left_02.png")],
+player_leftleg_walk_right_02: [getImage("player_leftleg_walk_right_02.png")],
+player_pants_walk_left01: [getImage("player_pants_walk_left01.png")],
+player_pants_walk_right01: [getImage("player_pants_walk_right01.png")],
+player_pants_walk_left02: [getImage("player_pants_walk_left02.png")],
+player_pants_walk_right02: [getImage("player_pants_walk_right02.png")],
+player_arm_diag_1: [getImage("player_arm_diag_1.png")],
+player_arm_diag_2: [getImage("player_arm_diag_2.png")],
+player_arm_diag_right: [getImage("player_arm_diag_right.png")],
+player_arm_diag_left: [getImage("player_arm_diag_left.png")],
+player_arm_diagback_right: [getImage("player_arm_diagback_right.png")],
+player_arm_diagback_left: [getImage("player_arm_diagback_left.png")],
+drop: [getImage("drop.png")],
+pick_swing_top_01: [getImage("pick_swing_top_01.png")],
+pick_swing_top_02: [getImage("pick_swing_top_01.png")],
+pick_swing_arm_right_01: [getImage("pick_swing_arm_right_01.png")],
+pick_swing_arm_left_01: [getImage("pick_swing_arm_left_01.png")],
+pick_swing_arm_right_02: [getImage("pick_swing_arm_right_02.png")],
+pick_swing_arm_left_02: [getImage("pick_swing_arm_left_02.png")],
+
+pick_swing_arm_right_02: [getImage("pick_swing_arm_right_03.png")],
+pick_swing_arm_left_02: [getImage("pick_swing_arm_left_03.png")],
 }
 
 const materialKey = {
@@ -452,12 +493,47 @@ const materialKey = {
   "16766976": MinecraftImageSource.gold,
   "11204863": MinecraftImageSource.diamond,
   "16711680": MinecraftImageSource.lava,
+	"player_head_left" : MinecraftImageSource.player_head_left,
+	"player_head_right" : MinecraftImageSource.player_head_right,
+	"player_chest_left" : MinecraftImageSource.player_chest_left,
+	"player_chest_right" : MinecraftImageSource.player_chest_right,
+	"player_stand_left" : MinecraftImageSource.player_stand_left,
+	"player_stand_right" : MinecraftImageSource.player_stand_right,
+	"player_rightarm_stand_left" : MinecraftImageSource.player_rightarm_stand_left,
+	"player_leftarm_stand_right" : MinecraftImageSource.player_leftarm_stand_right,
+	"player_leftleg_walk_right_01": MinecraftImageSource.player_leftleg_walk_right_01,
+	"player_rightleg_walk_right_01": MinecraftImageSource.player_rightleg_walk_right_01,
+"player_pants_walk": MinecraftImageSource.player_pants_walk,
+	"player_leftleg_walk_left_01": MinecraftImageSource.player_leftleg_walk_left_01,
+	"player_rightleg_walk_left_01": MinecraftImageSource.player_rightleg_walk_left_01,
+"player_rightleg_walk_left_02": MinecraftImageSource.player_rightleg_walk_left_02,
+"player_leftleg_walk_right_02": MinecraftImageSource.player_leftleg_walk_right_02,
+"player_pants_walk_left01": MinecraftImageSource.player_pants_walk_left01,
+"player_pants_walk_right01": MinecraftImageSource.player_pants_walk_right01,
+"player_pants_walk_left02": MinecraftImageSource.player_pants_walk_left02,
+"player_pants_walk_right02": MinecraftImageSource.player_pants_walk_right02,
+"player_arm_diag_1": MinecraftImageSource.player_arm_diag_1,
+"player_arm_diag_2": MinecraftImageSource.player_arm_diag_2,
+"player_arm_diag_right": MinecraftImageSource.player_arm_diag_right,
+"player_arm_diag_left": MinecraftImageSource.player_arm_diag_left,
+"player_arm_diagback_right": MinecraftImageSource.player_arm_diagback_right,
+"player_arm_diagback_left": MinecraftImageSource.player_arm_diagback_left,
+"drop": MinecraftImageSource.drop,
+"pick_swing_top_01": MinecraftImageSource.pick_swing_top_01,
+"pick_swing_top_02": MinecraftImageSource.pick_swing_top_02,
+"pick_swing_arm_right_01": MinecraftImageSource.pick_swing_arm_right_01,
+"pick_swing_arm_left_01": MinecraftImageSource.pick_swing_arm_left_01,
+"pick_swing_arm_right_02": MinecraftImageSource.pick_swing_arm_right_02,
+"pick_swing_arm_left_02": MinecraftImageSource.pick_swing_arm_left_02,
+
+"pick_swing_arm_right_03": MinecraftImageSource.pick_swing_arm_right_03,
+"pick_swing_arm_left_03": MinecraftImageSource.pick_swing_arm_left_03,
 }
 
+const playerchars = ["⪽","⪾","▇","▉","║","╿","◟","◞","╱","╲","▀","✐","✎","⦦","⦧", "╵", "❙","◁","▷","∖","/","⟍","⟋","◜","◝","⑉","↗","↖","╹","’","◡","﹀","↘","↙"];
 for (block in Object.keys(materialKey)) {
   charImages.push(new Image)
 }
-
 const getMaterialIndex = (number) => {
   const keys = Object.keys(materialKey).sort((a, b) => Number(a) - Number(b));
   const key = keys.find(key => Number(key) === number);
@@ -546,6 +622,7 @@ const ScrollWorld = (offset = [0, 0], ...rest) => {
 
 const replaceColorWithImage = () => {
   w.registerHook("renderchar", (charCode, ctx, tileX, tileY, charX, charY, offsetX, offsetY, width, height) => {
+if(String.fromCharCode(charCode) == "█"){
     const color = getCharColor(tileX, tileY, charX, charY);
     const index = getMaterialIndex(color);
     const charKey = Object.keys(MinecraftImageSource)[index];
@@ -556,6 +633,23 @@ const replaceColorWithImage = () => {
       ctx.fillRect(offsetX, offsetY, width, height);
       ctx.drawImage(charImages[index], offsetX, offsetY, width, height);
     }
+}
+else{
+			const index = (playerchars.indexOf(String.fromCharCode(charCode)));
+
+if(index !== -1){
+if(!MinecraftImageSource[Object.keys(materialKey)[index+12]]){
+return false
+}
+      const imageSrc = CycleImage(MinecraftImageSource[Object.keys(materialKey)[index+12]], globalTickIterator);
+
+      charImages[index+12].src = imageSrc;
+				let [r,g,b] = int_to_rgb(getCharColor(-1,0,0,0))
+      ctx.fillStyle = `transparent`;
+      ctx.fillRect(offsetX, offsetY, width, height);
+      ctx.drawImage(charImages[index+12], offsetX, offsetY, width, height);
+}
+}
     return false;
   });
 };
@@ -595,7 +689,7 @@ setInterval(function() {
   centerPlayer(playerLocation, [0, 0], 0.05);
   w.redraw();
 }, 10)
-//replaceColorWithImage();
+replaceColorWithImage();
 
 //} //minecraft
 minecraft();
@@ -754,3 +848,4 @@ style.type = 'text/css';
 style.appendChild(document.createTextNode(mc_css));
 head.appendChild(style);
 document.querySelector('body').insertAdjacentHTML('beforeend', mc_html);
+w.doAnnounce("this is an alpha version. expect issues");
