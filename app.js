@@ -5,6 +5,7 @@
 //578 heart ui
 //582 before player token
 //585 after player token
+//762 before textbased changes to remove images
 function minecraft() {}
 let timeOfDay = 0;
 let cycleSpeed = 1;
@@ -202,7 +203,6 @@ function OnTimeOfDay(e) {
 }
 function onPlayerStats(e){
 const stats = e.stats[0];
-console.log(stats)
 saveToCookie("stats", JSON.stringify(stats));
 // Loop through each key in the object
 for (const key in stats) {
@@ -493,44 +493,14 @@ const materialKey = {
   "16766976": MinecraftImageSource.gold,
   "11204863": MinecraftImageSource.diamond,
   "16711680": MinecraftImageSource.lava,
-	"player_head_left" : MinecraftImageSource.player_head_left,
-	"player_head_right" : MinecraftImageSource.player_head_right,
-	"player_chest_left" : MinecraftImageSource.player_chest_left,
-	"player_chest_right" : MinecraftImageSource.player_chest_right,
-	"player_stand_left" : MinecraftImageSource.player_stand_left,
-	"player_stand_right" : MinecraftImageSource.player_stand_right,
-	"player_rightarm_stand_left" : MinecraftImageSource.player_rightarm_stand_left,
-	"player_leftarm_stand_right" : MinecraftImageSource.player_leftarm_stand_right,
-	"player_leftleg_walk_right_01": MinecraftImageSource.player_leftleg_walk_right_01,
-	"player_rightleg_walk_right_01": MinecraftImageSource.player_rightleg_walk_right_01,
-"player_pants_walk": MinecraftImageSource.player_pants_walk,
-	"player_leftleg_walk_left_01": MinecraftImageSource.player_leftleg_walk_left_01,
-	"player_rightleg_walk_left_01": MinecraftImageSource.player_rightleg_walk_left_01,
-"player_rightleg_walk_left_02": MinecraftImageSource.player_rightleg_walk_left_02,
-"player_leftleg_walk_right_02": MinecraftImageSource.player_leftleg_walk_right_02,
-"player_pants_walk_left01": MinecraftImageSource.player_pants_walk_left01,
-"player_pants_walk_right01": MinecraftImageSource.player_pants_walk_right01,
-"player_pants_walk_left02": MinecraftImageSource.player_pants_walk_left02,
-"player_pants_walk_right02": MinecraftImageSource.player_pants_walk_right02,
-"player_arm_diag_1": MinecraftImageSource.player_arm_diag_1,
-"player_arm_diag_2": MinecraftImageSource.player_arm_diag_2,
-"player_arm_diag_right": MinecraftImageSource.player_arm_diag_right,
-"player_arm_diag_left": MinecraftImageSource.player_arm_diag_left,
-"player_arm_diagback_right": MinecraftImageSource.player_arm_diagback_right,
-"player_arm_diagback_left": MinecraftImageSource.player_arm_diagback_left,
-"drop": MinecraftImageSource.drop,
-"pick_swing_top_01": MinecraftImageSource.pick_swing_top_01,
-"pick_swing_top_02": MinecraftImageSource.pick_swing_top_02,
-"pick_swing_arm_right_01": MinecraftImageSource.pick_swing_arm_right_01,
-"pick_swing_arm_left_01": MinecraftImageSource.pick_swing_arm_left_01,
-"pick_swing_arm_right_02": MinecraftImageSource.pick_swing_arm_right_02,
-"pick_swing_arm_left_02": MinecraftImageSource.pick_swing_arm_left_02,
-
-"pick_swing_arm_right_03": MinecraftImageSource.pick_swing_arm_right_03,
-"pick_swing_arm_left_03": MinecraftImageSource.pick_swing_arm_left_03,
 }
-
-const playerchars = ["⪽","⪾","▇","▉","║","╿","◟","◞","╱","╲","▀","✐","✎","⦦","⦧", "╵", "❙","◁","▷","∖","/","⟍","⟋","◜","◝","⑉","↗","↖","╹","’","◡","﹀","↘","↙"];
+//                       grass  dirt   gravel    mud      sand     clay    stone     iron   copper    gold    diamond    lava
+const blockCharColors = [32768,8281926,11316396,4271395,16772002,13418174,8289918,12763344,13801216,16766976,11204863,16711680];
+const blockCharText = ["«","Ò","Ö","Õ","Ö","Õ","Ñ","®","²","Ô","Ô","®"];
+const blockPrimary = ["#7e5f46","#7e5f46","#acacac", "#412d23","#ffeba2","#cfb7b7","#7e7e7e" ,"#d0cde4","#d29700","#acacac","#acacac","#fe0001"];
+const blockSecondary = ["#008000","#76573e","#7e7e7e","#4f3426","#e0c978","#a1846d","#777373","#b4b1cd","#acacac","#ffd800","#aaf8ff","#8a0606"]
+const playerchars = ["¤","¡","▇","▉","ð","í","ö","÷","ù","ú","û","ý","þ","ø","§","Ã","Í","Ä","ë","ò","¢","£","Æ","Ë","¾","¿","ä","å","È","É","Á","ç","Â","è"];
+const playerColors = ["#ecc983", "#ecc983","#000","#000","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000",]
 for (block in Object.keys(materialKey)) {
   charImages.push(new Image)
 }
@@ -622,34 +592,43 @@ const ScrollWorld = (offset = [0, 0], ...rest) => {
 
 const replaceColorWithImage = () => {
   w.registerHook("renderchar", (charCode, ctx, tileX, tileY, charX, charY, offsetX, offsetY, width, height) => {
-if(String.fromCharCode(charCode) == "█"){
+if(String.fromCharCode(charCode) == "¨"){
     const color = getCharColor(tileX, tileY, charX, charY);
-    const index = getMaterialIndex(color);
-    const charKey = Object.keys(MinecraftImageSource)[index];
-    if (charKey !== undefined) {
-      const imageSrc = CycleImage(MinecraftImageSource[charKey], globalTickIterator);
-      charImages[index].src = imageSrc;
-      ctx.fillStyle = "transparent";
-      ctx.fillRect(offsetX, offsetY, width, height);
-      ctx.drawImage(charImages[index], offsetX, offsetY, width, height);
-    }
-}
-else{
-			const index = (playerchars.indexOf(String.fromCharCode(charCode)));
+		const charIndex = blockCharColors.indexOf(color);
+   if(charIndex!== -1){
+const PrimaryColor = blockPrimary[charIndex];
+const SecondaryColor = blockSecondary[charIndex];
+const char = blockCharText[charIndex];
+if(char){
+ctx.fillStyle = SecondaryColor;
+ctx.fillRect(offsetX, offsetY, width, height);
 
-if(index !== -1){
-if(!MinecraftImageSource[Object.keys(materialKey)[index+12]]){
-return false
+ctx.font=`${cellH}px untitled7regular`
+ctx.textBaseline = "top"
+	var textYOffset = cellH - (5 * zoom);
+	var fontX = tileX * cellW + offsetX;
+	var fontY = tileY * cellH + offsetY;
+	var XPadding = cellWidthPad * zoom;
+ctx.fillStyle = PrimaryColor
+ctx.fillText(char,offsetX,offsetY);
 }
-      const imageSrc = CycleImage(MinecraftImageSource[Object.keys(materialKey)[index+12]], globalTickIterator);
+}
+}
+else {
+const char = String.fromCharCode(charCode);
+const charIndex = playerchars.indexOf(char);
+if(charIndex!== -1){
 
-      charImages[index+12].src = imageSrc;
-				let [r,g,b] = int_to_rgb(getCharColor(-1,0,0,0))
-      ctx.fillStyle = `transparent`;
-      ctx.fillRect(offsetX, offsetY, width, height);
-      ctx.drawImage(charImages[index+12], offsetX, offsetY, width, height);
+    //const color = getCharColor(tileX, tileY, charX, charY);
+ctx.fillStyle = "transparent";
+ ctx.fillRect(offsetX, offsetY, width, height);
+const color = playerColors[charIndex];
+ctx.fillStyle = color
+ctx.font=`${cellH}px untitled7regular`
+ctx.textBaseline = "middle"
 }
 }
+ctx.textBaseline = "middle"
     return false;
   });
 };
@@ -839,6 +818,14 @@ font-family: monospace;
     font-weight: 900;
 
     text-shadow: 0 0 4px white;
+}
+@font-face {
+    font-family: 'untitled7regular';
+    src: url('https://cdn.jsdelivr.net/gh/poopman-owot/ourworldofminecraft@alpha-0.09/minecraft2-webfont.woff2') format('woff2'),
+         url('https://cdn.jsdelivr.net/gh/poopman-owot/ourworldofminecraft@alpha-0.09/minecraft2-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: monospace;
+
 }
 `;
 
