@@ -6,6 +6,7 @@
 //582 before player token
 //585 after player token
 //762 before textbased changes to remove images
+//862 server upadted for unloaded tiles
 function minecraft() {}
 let timeOfDay = 0;
 let cycleSpeed = 1;
@@ -130,13 +131,13 @@ function OnSetupClient(server) {
     clientSetup = true;
     api_chat_send(e.grid);
     userZoom = e.zoom;
-if(doZoom){
-    doZoom(e.zoom * 100);
-}
+
+    changeZoom(e.zoom * 100);
+
     user = new User(e.username, e.usertype);
     AskTimeOfDay();
     AskForSurfaceData();
-    api_chat_send = doZoom = w.goToCoord = () => OnSetupClient();
+    api_chat_send = changeZoom = w.goToCoord = () => OnSetupClient();
 
   } else {
     console.error("Communication from minecraft server failed.")
@@ -494,11 +495,11 @@ const materialKey = {
   "11204863": MinecraftImageSource.diamond,
   "16711680": MinecraftImageSource.lava,
 }
-//                       grass  dirt   gravel    mud      sand     clay    stone     iron   copper    gold    diamond    lava
-const blockCharColors = [32768,8281926,11316396,4271395,16772002,13418174,8289918,12763344,13801216,16766976,11204863,16711680];
-const blockCharText = ["«","Ò","Ö","Õ","Ö","Õ","Ñ","®","²","Ô","Ô","®"];
-const blockPrimary = ["#7e5f46","#7e5f46","#acacac", "#412d23","#ffeba2","#cfb7b7","#7e7e7e" ,"#d0cde4","#d29700","#acacac","#acacac","#fe0001"];
-const blockSecondary = ["#008000","#76573e","#7e7e7e","#4f3426","#e0c978","#a1846d","#777373","#b4b1cd","#acacac","#ffd800","#aaf8ff","#8a0606"]
+//                       grass  dirt   gravel    mud      sand     clay    stone     iron   copper    gold    diamond    lava  unbreakable
+const blockCharColors = [32768,8281926,11316396,4271395,16772002,13418174,8289918,12763344,13801216,16766976,11204863,16711680,0];
+const blockCharText = ["«","Ò","Ö","Õ","Ö","Õ","Ñ","®","²","Ô","Ô","®","¬"];
+const blockPrimary = ["#7e5f46", "#7e5f46", "#acacac", "#412d23", "#ffeba2", "#cfb7b7", "#7e7e7e", "#d0cde4", "#d29700", "#acacac", "#acacac", "#fe0001" , "#608dad"];
+const blockSecondary = ["#008000", "#76573e", "#7e7e7e", "#4f3426", "#e0c978", "#a1846d", "#777373", "#b4b1cd", "#acacac", "#ffd800", "#aaf8ff", "#8a0606", "#c6d7e3"]
 const playerchars = ["¤","¡","▇","▉","ð","í","ö","÷","ù","ú","û","ý","þ","ø","§","Ã","Í","Ä","ë","ò","¢","£","Æ","Ë","¾","¿","ä","å","È","É","Á","ç","Â","è"];
 const playerColors = ["#ecc983", "#ecc983","#000","#000","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#005aff","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#6f6f6f","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#ecc983","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000","#000",]
 for (block in Object.keys(materialKey)) {
