@@ -1,7 +1,7 @@
 //                       grass  dirt   gravel    mud      sand     clay    stone     iron   copper    gold    diamond    lava            
 const blocknames =     ["grass", "dirt", "gravel", "mud",     "sand", "clay",   "stone",  "iron",   "copper", "gold", "diamond", "lava",  "unbreakable", "brick"]
 const blockCharColors = [32768, 8281926, 11316396, 4271395, 16772002, 13418174, 8289918, 12763344, 13801216, 16766976, 11204863, 16711680,0,13047552];
-const blockCharText =    ["«",    "Ò",     "Ö",      "Õ",      "Ö",     "Õ",     "Ñ",      "®",      "²",      "Ô",      "Ô",      "®",        "¬","Ë"];
+const blockCharText =    ["«",    "Ò",     "Ö",      "Õ",      "Ö",     "Õ",     "Ñ",      "®",      "²",      "Ô",      "Ô",      "®",        "¬","°"];
 const blockPrimary = ["#7e5f46", "#7e5f46", "#acacac", "#412d23", "#ffeba2", "#cfb7b7", "#7e7e7e", "#d0cde4", "#d29700", "#acacac", "#acacac", "#fe0001" , "#608dad","#C71700"];
 const blockSecondary = ["#008000", "#76573e", "#7e7e7e", "#4f3426", "#e0c978", "#a1846d", "#777373", "#b4b1cd", "#acacac", "#ffd800", "#aaf8ff", "#8a0606", "#c6d7e3","#ffffff"]
 const playerchars = ["¤", "¡", "▇", "▉", "ð", "í", "ö", "÷", "ù", "ú", "û", "ý", "þ", "ø", "§", "Ã", "Í", "Ä", "ë", "ò", "¢", "£", "Æ", "Ë", "¾", "¿", "ä", "å", "È", "É"];
@@ -116,7 +116,7 @@ var radioHTML = ``;
 var heartsHTML = ``;
 const labelsText = ["grass", "dirt", "stone", "gravel", "mud", "sand", "clay", "iron", "copper", "gold", "diamond", "lava","unbreakable","brick"]
 const labelsBG = ["rgb(0,128,0)", "rgb(126,95,70)", "rgb(126,126,126)", "rgb(172,172,172)",
-  "rgb(65,45,35)", "rgb(255,235,162)", "rgb(204,190,190)", "rgb(194,192,208)", "rgb(210,151,0)", "rgb(255,216,0)", "rgb(170,248,255)","rgb(255,0,0)", "rgb(10,10,10)"
+  "rgb(65,45,35)", "rgb(255,235,162)", "rgb(204,190,190)", "rgb(194,192,208)", "rgb(210,151,0)", "rgb(255,216,0)", "rgb(170,248,255)","rgb(255,0,0)", "rgb(10,10,10)","#C71700"
 ]
 for (i = 0; i < 14; i++) {
   radioHTML += `
